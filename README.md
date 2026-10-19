@@ -26,3 +26,11 @@ Click `Save` and you're good to go! Once deployed, your Redis instance will be a
 
 If you need help, you can always chat with us at https://render.com/chat.
 
+
+## eventpoll4 (EventMoot) configuration
+
+This fork runs Redis 7.4 for eventpoll4. `redis.conf` keeps data on the Render disk at `/var/lib/redis` (append-only file plus snapshots), listens on 6379, and uses `maxmemory 256mb` with `noeviction` (BullMQ needs it).
+
+The Render service has a Docker Command (`redis-server --port 6379 ...`) that replaces the image's entrypoint. `redis-server-wrapper.sh`, installed as `/usr/local/sbin/redis-server`, makes any such command load `redis.conf` first. Flags on the command still override it. Without it, Redis ran on built-in defaults and lost all data on every restart until 2026-10.
+
+Pushing to `master` deploys (Render auto-deploy). A deploy restarts Redis. After one, restart eventpoll4 too: it re-registers its BullMQ job schedulers at startup.
